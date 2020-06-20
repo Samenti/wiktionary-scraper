@@ -12,23 +12,10 @@ declension table data from Wiktionary.org.
 import io
 import requests
 from lxml import html
+import json
 
 URL_PREFIX = 'https://en.wiktionary.org/wiki/'
 
-words = []
-with io.open("nominals.txt", mode="rt", encoding="utf-8") as words_file:
-	for line in words_file:
-		if line != '\n':
-			words.append(line.strip('\n'))
-
-print("words:", words)
-response = requests.get(URL_PREFIX + words.pop())
-tree = html.fromstring(response.content)
-
-# content = tree.xpath('//table[contains(@class, "fi-decl")]//tr[@class="vsHide"]//span//text()|//table[contains(@class, "fi-decl")]//tr[@class="vsHide"]//td[not(*)]/text()')
-# num_elem = len(tree.xpath('//*'))
-# num_tr = len(tree.xpath('//table[contains(@class, "fi-decl")]//tr[@class="vsHide"]//span//text()|//table[contains(@class, "fi-decl")]//tr[@class="vsHide"]//td[not(*)]/text()'))
-# print content, num_elem, num_tr
 
 def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 	"""
@@ -49,13 +36,10 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 	# return empty list if the page doesn't have the required language
 	if lang_on_page == []:
 		return []
-	print("lang_on_page[0]:", lang_on_page[0], "text:", lang_on_page[0].xpath('.//text()'))
+	# print("lang_on_page[0]:", lang_on_page[0], "text:", lang_on_page[0].xpath('.//text()'))
 	
 	lang_h2 = lang_on_page[0].xpath('./..')
-	print("lang_h2:", lang_h2, "text:", lang_h2[0].xpath('.//text()'))
-
-	# outer_div = lang_on_page[0].xpath('./ancestor::h2/parent::div')    # select the div element that is the parent of the above h2
-	# print "outer_div:", outer_div
+	# print("lang_h2:", lang_h2, "text:", lang_h2[0].xpath('.//text()'))
 	
 	next_lang_h2 = lang_on_page[0].xpath('./ancestor::h2/following-sibling::h2')    # select the next h2 sibling, probably the next language's section heading
 	next_lang_h2 = lang_h2[0].xpath('./following-sibling::h2[1]')
@@ -63,7 +47,7 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 		next_lang_text = ""
 	else: 
 		next_lang_text = next_lang_h2[0].xpath('.//text()')
-	print("next_lang_h2:", next_lang_h2, "next_lang_text:", next_lang_text)
+	# print("next_lang_h2:", next_lang_h2, "next_lang_text:", next_lang_text)
 
 	
 	curr_elem = lang_h2
@@ -85,13 +69,13 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			break
 		curr_elem = next_elem
 
-	print("wtype_elems:", wtype_elem, "text:", wtype_elem[0].xpath('.//text()'))
+	# print("wtype_elems:", wtype_elem, "text:", wtype_elem[0].xpath('.//text()'))
 
 	table = wtype_elem[0].xpath('./following::table[1]')
-	print("table:", table)
+	# print("table:", table)
 	if wtype == "Noun":
 		raw_table_data = table[0].xpath('./tbody/tr[@class="vsHide"]/td//text()')
-		print("raw_table_data:", raw_table_data)
+		# print("raw_table_data:", raw_table_data)
 		table_data = []
 		for raw_data in raw_table_data:
 			if raw_data == '\u2014\n':
@@ -100,12 +84,36 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 				table_data.append(raw_data)
 		table_data[2] = (table_data[2], table_data[4])
 		table_data.pop(4)
-		print("table_data:", table_data)
+		# print("table_data:", table_data)
+		return table_data
 
 	elif wtype == "Pronoun":
 		return
 
 
 
+words = []
+with io.open("nominals.txt", mode='rt', encoding='utf-8') as words_file:
+	for line in words_file:
+		if line != '\n':
+			word = line.strip('\n').split(',')
+			if len(word) == 1:
+				words.append( (word[0].strip(), "Noun", "Finnish") )
+			elif len(word) == 2:
+				if word[1].strip() in ["Noun", "Pronoun", "Numeral", "Adjective"]:
+					words.append( (word[0].strip(), word[1].strip(), "Finnish") )
+				else:
+					words.append( (word[0].strip(), "Noun", word[1].strip()) )
+			else:
+				words.append( (word[0].strip(), word[1].strip(), word[2].strip()) )
 
-scrape_declension_table('äiti')
+print("words:", words)
+
+tables = {}
+for word in words:
+	response = requests.get(URL_PREFIX + word[0])
+	tree = html.fromstring(response.content)
+	tables[word[0]] = scrape_declension_table(word[0], word[1], word[2])
+
+with io.open('tables.txt', mode='w', encoding="utf-8") as tables_file:
+    json.dump(tables, tables_file)

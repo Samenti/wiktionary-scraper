@@ -1,4 +1,4 @@
 sokeri
-suola
-veli
+suola, Noun
+veli, Noun, Finnish
 äiti
