@@ -3,7 +3,7 @@
 """
 Wiktionary Scraper for FDTT
 ---------------------------
-This is Python 2.7 program using lxml and requests libraries to scrape
+This is Python 3 program using lxml and requests libraries to scrape
 declension table data from Wiktionary.org.
 """
 
@@ -13,15 +13,15 @@ import io
 import requests
 from lxml import html
 
-URL_PREFIX = u'https://en.wiktionary.org/wiki/'
+URL_PREFIX = 'https://en.wiktionary.org/wiki/'
 
 words = []
 with io.open("nominals.txt", mode="rt", encoding="utf-8") as words_file:
 	for line in words_file:
-		if line != u'\n':
+		if line != '\n':
 			words.append(line.strip('\n'))
 
-print "words:", words
+print("words:", words)
 response = requests.get(URL_PREFIX + words.pop())
 tree = html.fromstring(response.content)
 
@@ -49,10 +49,10 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 	# return empty list if the page doesn't have the required language
 	if lang_on_page == []:
 		return []
-	print "lang_on_page[0]:", lang_on_page[0], "text:", lang_on_page[0].xpath('.//text()')
+	print("lang_on_page[0]:", lang_on_page[0], "text:", lang_on_page[0].xpath('.//text()'))
 	
 	lang_h2 = lang_on_page[0].xpath('./..')
-	print "lang_h2:", lang_h2, "text:", lang_h2[0].xpath('.//text()')
+	print("lang_h2:", lang_h2, "text:", lang_h2[0].xpath('.//text()'))
 
 	# outer_div = lang_on_page[0].xpath('./ancestor::h2/parent::div')    # select the div element that is the parent of the above h2
 	# print "outer_div:", outer_div
@@ -63,7 +63,7 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 		next_lang_text = ""
 	else: 
 		next_lang_text = next_lang_h2[0].xpath('.//text()')
-	print "next_lang_h2:", next_lang_h2, "next_lang_text:", next_lang_text
+	print("next_lang_h2:", next_lang_h2, "next_lang_text:", next_lang_text)
 
 	
 	curr_elem = lang_h2
@@ -85,22 +85,22 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			break
 		curr_elem = next_elem
 
-	print "wtype_elems:", wtype_elem, "text:", wtype_elem[0].xpath('.//text()')
+	print("wtype_elems:", wtype_elem, "text:", wtype_elem[0].xpath('.//text()'))
 
 	table = wtype_elem[0].xpath('./following::table[1]')
-	print "table:", table
+	print("table:", table)
 	if wtype == "Noun":
 		raw_table_data = table[0].xpath('./tbody/tr[@class="vsHide"]/td//text()')
-		print "raw_table_data:", raw_table_data
+		print("raw_table_data:", raw_table_data)
 		table_data = []
 		for raw_data in raw_table_data:
-			if raw_data == u'\u2014\n':
-				table_data.append(u'')
+			if raw_data == '\u2014\n':
+				table_data.append('')
 			elif raw_data != '\n':
 				table_data.append(raw_data)
 		table_data[2] = (table_data[2], table_data[4])
 		table_data.pop(4)
-		print "table_data:", table_data
+		print("table_data:", table_data)
 
 	elif wtype == "Pronoun":
 		return
@@ -108,4 +108,4 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 
 
 
-scrape_declension_table(u'äiti')
+scrape_declension_table('äiti')
