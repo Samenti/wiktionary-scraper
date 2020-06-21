@@ -2,3 +2,4 @@ sokeri
 suola, Noun
 veli, Noun, Finnish
 äiti
+omena
