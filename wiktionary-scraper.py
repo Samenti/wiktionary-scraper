@@ -79,18 +79,67 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 	table = wtype_elem[0].xpath('./following::table[1]')
 	# print("table:", table)
 	if wtype in {"Noun", "noun"}:
-		raw_table_data = table[0].xpath('./tbody/tr[@class="vsHide"]/td//text()')
-		# print("raw_table_data:", raw_table_data)
-		table_data = []
-		for raw_data in raw_table_data:
-			if raw_data == '\u2014\n':
-				table_data.append('')
-			elif raw_data != '\n':
-				table_data.append(raw_data)
-		table_data[2] = (table_data[2], table_data[4])
-		table_data.pop(4)
-		# print("table_data:", table_data)
-		return table_data
+		col_sg = []
+		col_pl = []
+		curr_row = table[0].xpath('./tbody/tr[@class="vsHide"][1]')
+		if curr_row[0].xpath('./td') != []:
+			cell_cont = curr_row[0].xpath('./td[1]//text()')
+			word_forms = []
+			for string in cell_cont:
+				if string not in {'', '\n', 'rare'}:
+					word_forms.append(string.strip('\n'))
+			if len(word_forms) == 1:
+				col_sg.append(word_forms[0])
+			elif len(word_forms) > 1:
+				col_sg.append(tuple(word_forms))
+			
+			cell_cont = curr_row[0].xpath('./td[2]//text()')
+			word_forms = []
+			for string in cell_cont:
+				if string not in {'', '\n', 'rare'}:
+					word_forms.append(string.strip('\n'))
+			if len(word_forms) == 1:
+				col_pl.append(word_forms[0])
+			elif len(word_forms) > 1:
+				col_pl.append(tuple(word_forms))
+
+		while True:
+			next_row = curr_row[0].xpath('./following-sibling::tr[@class="vsHide"][1]')
+
+			if len(next_row) == 0:
+				break
+
+			if next_row[0].xpath('./td') == []:
+				curr_row = next_row
+				continue
+			
+			cell_cont = next_row[0].xpath('./td[1]//text()')
+			word_forms = []
+			for string in cell_cont:
+				if string not in {'', '\n', 'rare'}:
+					word_forms.append(string.strip('\n'))
+			if len(word_forms) == 1:
+				col_sg.append(word_forms[0])
+			elif len(word_forms) > 1:
+				col_sg.append(tuple(word_forms))
+			
+			cell_cont = next_row[0].xpath('./td[2]//text()')
+			word_forms = []
+			for string in cell_cont:
+				if string not in {'', '\n', 'rare'}:
+					word_forms.append(string.strip('\n'))
+			if len(word_forms) == 1:
+				col_pl.append(word_forms[0])
+			elif len(word_forms) > 1:
+				col_pl.append(tuple(word_forms))
+
+			curr_row = next_row
+
+		acc_gen = col_sg.pop(2)
+		col_sg[1] = (col_sg[1], acc_gen)
+
+		col_sg.extend(col_pl)
+		return col_sg
 
 	elif wtype in {"Pronoun", "pronoun"}:
 		return
@@ -105,15 +154,15 @@ with io.open("nominals.txt", mode='rt', encoding='utf-8') as words_file:
 	for line in words_file:
 		if line != '\n':
 			word = line.strip('\n').split(',')
-			if len(word) == 1:
-				words.append( (word[0].strip(), "Noun", "Finnish") )
-			elif len(word) == 2:
-				if word[1].strip() in ["Noun", "Pronoun", "Numeral", "Adjective"]:
-					words.append( (word[0].strip(), word[1].strip(), "Finnish") )
+			if len(word) == 2:
+				words.append( (word[0].strip(), "Noun", "Finnish", word[-1].strip()) )
+			elif len(word) == 3:
+				if word[1].strip() in {"Noun", "noun", "Adjective", "adjective", "Numeral", "numeral", "Pronoun", "pronoun"}:
+					words.append( (word[0].strip(), word[1].strip(), "Finnish", word[-1].strip()) )
 				else:
-					words.append( (word[0].strip(), "Noun", word[1].strip()) )
-			else:
-				words.append( (word[0].strip(), word[1].strip(), word[2].strip()) )
+					words.append( (word[0].strip(), "Noun", word[1].strip(), word[-1].strip()) )
+			elif len(word) > 3:
+				words.append( (word[0].strip(), word[1].strip(), word[2].strip(), word[-1].strip()) )
 
 print("words:", words)
 
@@ -121,7 +170,10 @@ tables = {}
 for word in words:
 	response = requests.get(URL_PREFIX + word[0])
 	tree = html.fromstring(response.content)
-	tables[word[0]] = scrape_declension_table(word[0], word[1], word[2])
+	declensions = scrape_declension_table(word[0], word[1], word[2])
+	declensions.append(word[3])
+	print("declensions:", declensions)
+	tables[word[0]] = declensions
 
 with io.open('tables.txt', mode='w', encoding="utf-8") as tables_file:
     json.dump(tables, tables_file)

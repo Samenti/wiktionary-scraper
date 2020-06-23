@@ -1,5 +1,5 @@
-sokeri
-suola, Noun
-veli, Noun, Finnish
-äiti
-omena
+sokeri, sugar
+suola, Noun, salt
+veli, Noun, Finnish, brother
+äiti, mother
+omena, apple
