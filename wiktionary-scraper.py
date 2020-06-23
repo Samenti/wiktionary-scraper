@@ -22,14 +22,16 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 	Scrape the declension table data from Wiktionary for 'word'.
 	'wtype' can be "Noun", "Adjective", "Numeral" or "Pronoun".
 	
-	Output is a list of nominal forms in the scheme: 
-	'<nominative singular', '<nominative plural>', 
-	'<accusative-nominative singular>', '<accusative plural>', 
-	'<accusative-genitive singular>',
-	'<genitive singular>', '<genitive plural>',
-	'<partitive singular>', '<partitive plural>', etc.
+	Output is a list of nominal forms in the scheme (for nouns): 
+	'<nominative singular', '<genitive plural>',
+	('<accusative-nom singular>', '<accusative-gen singular>'),
+	'<partitive singular>', '<illative singular>',
+	... <ine, all, ade, ela, abl, ess, abe, tra, ins, com> ...,
+	'<nominative plural>', '<genitive plural>',
+	... '<comitative plural>'
 	In case there are multiple correct forms at a certain case,
-	a tuple of strings is used.
+	a tuple of strings is used (see accusative singular).
+	Output is similar for other wtypes.
 	"""
 
 	# return empty list if wtype is invalid
@@ -138,8 +140,13 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 		acc_gen = col_sg.pop(2)
 		col_sg[1] = (col_sg[1], acc_gen)
 
-		col_sg.extend(col_pl)
-		return col_sg
+		answer_table = []
+		mapping = (0, 2, 1, 3, 6, 4, 9, 7, 5, 8, 10, 13, 11, 12, 14)
+		for col in (col_sg, col_pl):
+			for idx in mapping:
+				answer_table.append(col[idx])
+
+		return answer_table
 
 	elif wtype in {"Pronoun", "pronoun"}:
 		return
@@ -147,6 +154,7 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 		return
 	elif wtype in {"Numeral", "numeral"}:
 		return
+
 
 
 words = []
