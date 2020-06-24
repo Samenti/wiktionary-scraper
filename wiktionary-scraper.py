@@ -41,6 +41,14 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 	if wtype not in valid_wtypes:
 		print("type '" + wtype + "' is not a valid word type")
 		return []
+	elif wtype == "noun":
+		wtype = "Noun"
+	elif wtype == "pronoun":
+		wtype = "Pronoun"
+	elif wtype == "numeral":
+		wtype = "Numeral"
+	elif wtype == "adjective":
+		wtype = "Adjective"
 	
 	response = requests.get(URL_PREFIX + word)
 	tree = html.fromstring(response.content)
@@ -69,6 +77,7 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			break
 		if next_elem[0].tag in ["h3", "h4", "h5", "h6"]:
 			# if the desired word class is found, end search
+			# print("wtype:", wtype, "next_elem:", next_elem[0].xpath('.//text()'))
 			if wtype in next_elem[0].xpath('.//text()'):
 				wtype_elem = next_elem[0]
 				break
@@ -78,35 +87,161 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			return []
 		curr_elem = next_elem
 
+	invalid_cell_cont = {
+	'', '\n', 'rare', 'rare\n', '—', '—\n', '\u2014', '\u2014\n', '–', '–\n', '\u2013', '\u2013\n'
+	}
+	dashes = {
+	'—', '—\n', '\u2014', '\u2014\n', '–', '–\n', '\u2013', '\u2013\n'
+	}
+	to_strip = '\n ()'
 	table = wtype_elem[0].xpath('./following::table[1]')
 	# print("table:", table)
-	if wtype in {"Noun", "noun"}:
+	
+
+	# articles about nouns and adjectives have the same type of table on the Wiktionary
+	if wtype in {"Noun", "Adjective"}:
 		col_sg = []
 		col_pl = []
 		curr_row = table[0].xpath('./tbody/tr[@class="vsHide"][1]')
+		# if the first row contains data and not headings, handle that:
 		if curr_row[0].xpath('./td') != []:
 			cell_cont = curr_row[0].xpath('./td[1]//text()')
-			word_forms = []
+			strings = []
+			# handle the case when multiple correct forms are delineated with commas
 			for string in cell_cont:
-				if string not in {'', '\n', 'rare'}:
-					word_forms.append(string.strip('\n'))
+				strings.extend(string.split(','))
+			word_forms = []
+			for string in strings:
+				# exclude strings that are not valid word forms
+				if string not in invalid_cell_cont:
+					# strip starting and trailing whitespaces, linebreaks and other invalid characters
+					word_forms.append(string.strip(to_strip))
+				elif string in dashes:
+					# dash always means no valid form
+					word_forms.append('')
+			# add to singulars column, add as tuple if there were multiple valid strings
 			if len(word_forms) == 1:
 				col_sg.append(word_forms[0])
 			elif len(word_forms) > 1:
 				col_sg.append(tuple(word_forms))
 			
 			cell_cont = curr_row[0].xpath('./td[2]//text()')
-			word_forms = []
+			strings = []
 			for string in cell_cont:
-				if string not in {'', '\n', 'rare'}:
-					word_forms.append(string.strip('\n'))
+				strings.extend(string.split(','))
+			word_forms = []
+			for string in strings:
+				if string not in invalid_cell_cont:
+					word_forms.append(string.strip(to_strip))
+				elif string in dashes:
+					word_forms.append('')
+			# add to plurals column, add as tuple if there were multiple valid strings
+			if len(word_forms) == 1:
+				col_pl.append(word_forms[0])
+			elif len(word_forms) > 1:
+				col_pl.append(tuple(word_forms))
+
+		# iterate over every row in the table
+		while True:
+			next_row = curr_row[0].xpath('./following-sibling::tr[@class="vsHide"][1]')
+
+			# quit loop if there are no more rows
+			if len(next_row) == 0:
+				break
+
+			# if there are no data cells in row, skip to next
+			if next_row[0].xpath('./td') == []:
+				curr_row = next_row
+				continue
+			
+			cell_cont = next_row[0].xpath('./td[1]//text()')
+			strings = []
+			for string in cell_cont:
+				strings.extend(string.split(','))
+			word_forms = []
+			for string in strings:
+				if string not in invalid_cell_cont:
+					word_forms.append(string.strip(to_strip))
+				elif string in dashes:
+					word_forms.append('')
+			if len(word_forms) == 1:
+				col_sg.append(word_forms[0])
+			elif len(word_forms) > 1:
+				col_sg.append(tuple(word_forms))
+			
+			cell_cont = next_row[0].xpath('./td[2]//text()')
+			sstrings = []
+			for string in cell_cont:
+				strings.extend(string.split(','))
+			word_forms = []
+			for string in strings:
+				if string not in invalid_cell_cont:
+					word_forms.append(string.strip(to_strip))
+				elif string in dashes:
+					word_forms.append('')
+			if len(word_forms) == 1:
+				col_pl.append(word_forms[0])
+			elif len(word_forms) > 1:
+				col_pl.append(tuple(word_forms))
+
+			curr_row = next_row
+
+		# the genitive looking form of accusative singular is in a separate row,
+		# but we need it in a tuple together with the nominative looking form
+		acc_gen = col_sg.pop(2)
+		col_sg[1] = (col_sg[1], acc_gen)
+
+		answer_table = []
+		# this mapping helps rearrange the output of the scraper to be the input of FDTT
+		mapping = (0, 2, 1, 3, 6, 4, 9, 7, 5, 8, 10, 13, 11, 12, 14)
+		for col in (col_sg, col_pl):
+			for idx in mapping:
+				answer_table.append(col[idx])
+
+		return answer_table
+
+	# articles about pronouns and numerals tend to have the same type of table on the Wiktionary
+	elif wtype in {"Pronoun", "Numeral"}:
+		col_sg = []
+		col_pl = []
+		table = table[0].xpath('.//table[1]')
+		if table == []:
+			return []
+		
+		curr_row = table[0].xpath('./tbody/tr[1]')
+		if curr_row[0].xpath('./td') != []:
+			cell_cont = curr_row[0].xpath('./td[2]//text()')
+			strings = []
+			for string in cell_cont:
+				strings.extend(string.split(','))
+			word_forms = []
+			for string in strings:
+				if string not in invalid_cell_cont:
+					word_forms.append(string.strip(to_strip))
+				elif string in dashes:
+					word_forms.append('')
+			if len(word_forms) == 1:
+				col_sg.append(word_forms[0])
+			elif len(word_forms) > 1:
+				col_sg.append(tuple(word_forms))
+			
+			cell_cont = curr_row[0].xpath('./td[2]//text()')
+			strings = []
+			for string in cell_cont:
+				strings.extend(string.split(','))
+			word_forms = []
+			for string in strings:
+				if string not in invalid_cell_cont:
+					word_forms.append(string.strip(to_strip))
+				elif string in dashes:
+					word_forms.append('')
 			if len(word_forms) == 1:
 				col_pl.append(word_forms[0])
 			elif len(word_forms) > 1:
 				col_pl.append(tuple(word_forms))
 
 		while True:
-			next_row = curr_row[0].xpath('./following-sibling::tr[@class="vsHide"][1]')
+			next_row = curr_row[0].xpath('./following-sibling::tr[1]')
 
 			if len(next_row) == 0:
 				break
@@ -115,21 +250,31 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 				curr_row = next_row
 				continue
 			
-			cell_cont = next_row[0].xpath('./td[1]//text()')
-			word_forms = []
+			cell_cont = next_row[0].xpath('./td[2]//text()')
+			strings = []
 			for string in cell_cont:
-				if string not in {'', '\n', 'rare'}:
-					word_forms.append(string.strip('\n'))
+				strings.extend(string.split(','))
+			word_forms = []
+			for string in strings:
+				if string not in invalid_cell_cont:
+					word_forms.append(string.strip(to_strip))
+				elif string in dashes:
+					word_forms.append('')
 			if len(word_forms) == 1:
 				col_sg.append(word_forms[0])
 			elif len(word_forms) > 1:
 				col_sg.append(tuple(word_forms))
 			
-			cell_cont = next_row[0].xpath('./td[2]//text()')
-			word_forms = []
+			cell_cont = next_row[0].xpath('./td[3]//text()')
+			strings = []
 			for string in cell_cont:
-				if string not in {'', '\n', 'rare'}:
-					word_forms.append(string.strip('\n'))
+				strings.extend(string.split(','))
+			word_forms = []
+			for string in strings:
+				if string not in invalid_cell_cont:
+					word_forms.append(string.strip(to_strip))
+				elif string in dashes:
+					word_forms.append('')
 			if len(word_forms) == 1:
 				col_pl.append(word_forms[0])
 			elif len(word_forms) > 1:
@@ -137,23 +282,15 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 
 			curr_row = next_row
 
-		acc_gen = col_sg.pop(2)
-		col_sg[1] = (col_sg[1], acc_gen)
 
 		answer_table = []
-		mapping = (0, 2, 1, 3, 6, 4, 9, 7, 5, 8, 10, 13, 11, 12, 14)
+		# this mapping helps rearrange the output of the scraper to be the input of FDTT
+		mapping = (0, 1, 3, 2, 6, 4, 9, 7, 5, 8, 10, 13, 11, 12, 14)
 		for col in (col_sg, col_pl):
 			for idx in mapping:
 				answer_table.append(col[idx])
 
 		return answer_table
-
-	elif wtype in {"Pronoun", "pronoun"}:
-		return
-	elif wtype in {"Adjective", "adjecive"}:
-		return
-	elif wtype in {"Numeral", "numeral"}:
-		return
 
 
 
