@@ -170,7 +170,7 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 				col_sg.append(tuple(word_forms))
 			
 			cell_cont = next_row[0].xpath('./td[2]//text()')
-			sstrings = []
+			strings = []
 			for string in cell_cont:
 				strings.extend(string.split(','))
 			word_forms = []
