@@ -1,9 +1,213 @@
 sokeri, sugar
-suola, Noun, salt
-veli, Noun, Finnish, brother
+suola, salt
+veli, brother
 äiti, mother
 omena, apple
-tuo, Pronoun, that
+tuo, pronoun, that
 minä, pronoun, I
 yksi, numeral, one
-minä, Noun, ego
+lasi, glass
+kuka, pronoun, who
+presidentti, president (head of state)
+päärynä, pear
+kaappi, cabinet
+poika, son; boy
+voi, butter
+yläkerta, upstairs
+romantiikka, romance
+toiminta, action
+komedia, comedy
+kaukosäädin, remote control
+tuoli, chair
+sohva, sofa
+sekarotuinen, adjective, mixed-breed
+rotu, breed; race
+suloinen, adjective, sweet
+terve, adjective, healthy
+se, pronoun, it
+maito, milk
+mustikka, blueberry
+piirakka, pie
+sininen, adjective, blue
+kitara, guitar
+vesi, water
+elokuva, movie
+pussi, bag
+sama, pronoun, same
+kala, fish
+viisi, numeral, other_, five
+kynttilä, candle
+lumi, snow
+samanlainen, adjective, similar
+hyvä, adjective, good
+hän, pronoun, he/she
+tämä, pronoun, this
+itse, oneself; self
+herkullinen, adjective, delicious
+iso, adjective, big
+oppilas, student
+sää, weather
+jokin, pronoun, something
+karkki, candy
+eläin, animal
+neljä, numeral, four
+ikkuna, window
+ruoka, food
+koulu, school
+keittiö, kitchen
+isä, father
+Suomi, proper noun, Finland
+selvä, adjective, clear; obvious
+seitsemän, numeral, seven
+piha, yard
+pehmeä, adjective, soft
+erilainen, adjective, different
+pasta, pasta
+hius, hair
+kymmenen, numeral, other_, ten
+pää, head; end
+kaunis, adjective, beautiful
+kahvi, coffee
+englanti, English language
+sade, rain
+kirja, book
+puhelin, telephone
+silmä, eye
+moni, pronoun, many
+kylmä, adjective, cold
+paita, shirt; blouse
+väsynyt, adjective, tired
+salaatti, salad
+vaikea, adjective, difficult
+ennuste, forecast; prediction
+sähly, floorball
+kirjasto, library
+kahdeksan, numeral, eight
+tulitikku, match (to make fire with)
+televisio, television
+musta, adjective, black
+punainen, adjective, red
+villapaita, knitted sweater
+sinä, pronoun, you
+muki, mug
+lautanen, plate
+suomalainen, adjective, Finnish (adj.)
+kello, clock
+hetki, moment
+kuppi, cup
+kulho, bowl
+ajatus, thought; idea
+pöytä, table
+ovi, door
+seinä, wall
+näköinen, adjective, -looking
+koira, dog
+nenä, nose
+kuusi, numeral, other_, six
+kolme, numeral, three
+kaksi, numeral, two
+yhdeksän, numeral, nine
+suu, mouth
+tylsä, adjective, boring
+kuu, moon
+aurinko, sun
+tähti, star
+hauska, adjective, fun; pleasant
+tee, tea
+vihreä, adjective, green
+sisko, sister
+sateenvarjo, umbrella
+viini, wine
+olut, beer
+takki, jacket; coat
+paita, shirt
+uuni, oven
+ruskea, adjective, brown
+uni, dream
+pipo, stocking cap
+kissa, cat
+käärme, snake
+lisko, lizard
+kaikki, pronoun, everything; everyone; all
+nurmikko, lawn
+kukka, flower
+nälkä, hunger
+paketti, package
+onni, luck
+mukava, adjective, nice; comfortable
+komea, adjective, handsome
+mies, man
+velho, wizard
+nainen, woman
+herra, Mr.; sir; lord
+sauna, sauna
+soitin, musical instrument; record player
+tärkeä, adjective, important
+Viro, proper noun, Estonia
+pieni, adjective, small
+kieli, language; tongue
+maa, country
+vanha, adjective, old
+Ranska, proper noun, France
+tomaatti, noun, tomato
+peruna, potato
+uusi, adjective, new
+jano, thirst
+pyöreä, adjective, round
+kylmä, adjective, cold
+kuuma, adjective, hot
+valmis, adjective, ready
+koti, home
+moderni, adjective, modern
+huone, room
+veranta, veranda
+televisio, television
+talo, house
+radio, radio
+suuri, adjective, large
+asunto, apartment
+kellari, basement
+sänky, bed
+piha, yard
+hiljainen, adjective, quiet; silent
+tuhma, adjective, naughty
+lelu, toy
+bändi, band
+Venäjä, proper noun, Russia
+kännykkä, mobile phone
+kaupunki, city; town
+Ruotsi, proper noun, Sweden
+Norja, proper noun, Norway
+laulu, song
+nimi, name
+shamaani, shaman
+Islanti, proper noun, Iceland
+Tanska, proper noun, Denmark
+viikinki, viking
+auto, car
+ujo, adjective, shy
+lapsi, child
+ystävä, friend
+söpö, adjective, cute; adorable
+ihminen, human; person
+rehellinen, adjective, honest
+sisukas, adjective, gutsy; with sisu
+tyttö, girl
+undulaatti, parakeet
+pupu, bunny
+poni, pony
+kiltti, adjective, kind; nice
+vauva, baby
+nuori, adjective, young
+surullinen, adjective, sad
+perhe, family
+pari, couple; pair
+iloinen, adjective, happy; cheerful
+onnellinen, adjective, happy
+vaari, grandpa
+mummo, grandma
+nalle, teddybear
+karhu, bear
+lemmikki, pet
+pohjoinen, north
+valkoinen, adjective, white

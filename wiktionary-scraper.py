@@ -17,10 +17,13 @@ import json
 URL_PREFIX = 'https://en.wiktionary.org/wiki/'
 
 
-def scrape_declension_table(word, wtype="Noun", language="Finnish"):
+def scrape_declension_table(word, wtype="Noun", language="Finnish", tabletype="same_"):
 	"""
-	Scrape the declension table data from Wiktionary for 'word'.
-	'wtype' can be "Noun", "Adjective", "Numeral" or "Pronoun".
+	Scrape the declension table data from Wiktionary for "word".
+	
+	"wtype" can be "Noun", "Proper noun", "Adjective", "Numeral" or "Pronoun".
+	"tabletype" can be "same_" or "other_", the latter meaning that the table should
+	be scraped by the method used for the table type not usually associated with the "wtype".
 	
 	Output is a list of nominal forms in the scheme (for nouns): 
 	'<nominative singular', '<genitive plural>',
@@ -36,13 +39,15 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 
 	# return empty list if wtype is invalid
 	valid_wtypes = {
-	"Noun", "noun", "Adjective", "adjective", "Numeral", "numeral", "Pronoun", "pronoun"
+	"Noun", "noun", "Proper noun", "proper noun", "Adjective", "adjective", "Numeral", "numeral", "Pronoun", "pronoun"
 	}
 	if wtype not in valid_wtypes:
 		print("type '" + wtype + "' is not a valid word type")
 		return []
 	elif wtype == "noun":
 		wtype = "Noun"
+	elif wtype == "proper noun":
+		wtype = "Proper noun"
 	elif wtype == "pronoun":
 		wtype = "Pronoun"
 	elif wtype == "numeral":
@@ -93,13 +98,13 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 	dashes = {
 	'—', '—\n', '\u2014', '\u2014\n', '–', '–\n', '\u2013', '\u2013\n'
 	}
-	to_strip = '\n ()'
-	table = wtype_elem[0].xpath('./following::table[1]')
-	# print("table:", table)
+	to_strip = '\n ()*'
 	
 
-	# articles about nouns and adjectives have the same type of table on the Wiktionary
-	if wtype in {"Noun", "Adjective"}:
+	# articles about nouns and adjectives usually have the same type of table on the Wiktionary
+	if wtype in {"Noun", "Proper noun", "Adjective"} or tabletype == "other_":
+		table = wtype_elem[0].xpath('./following::table[@class="inflection-table fi-decl vsSwitcher"]')
+		# print("table:", table)
 		col_sg = []
 		col_pl = []
 		curr_row = table[0].xpath('./tbody/tr[@class="vsHide"][1]')
@@ -109,13 +114,15 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			strings = []
 			# handle the case when multiple correct forms are delineated with commas
 			for string in cell_cont:
-				strings.extend(string.split(','))
+				strings.extend(string.split(', '))
 			word_forms = []
 			for string in strings:
 				# exclude strings that are not valid word forms
 				if string not in invalid_cell_cont:
 					# strip starting and trailing whitespaces, linebreaks and other invalid characters
-					word_forms.append(string.strip(to_strip))
+					bare = string.strip(to_strip)
+					if bare not in invalid_cell_cont:
+						word_forms.append(bare)
 				elif string in dashes:
 					# dash always means no valid form
 					word_forms.append('')
@@ -128,11 +135,13 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			cell_cont = curr_row[0].xpath('./td[2]//text()')
 			strings = []
 			for string in cell_cont:
-				strings.extend(string.split(','))
+				strings.extend(string.split(', '))
 			word_forms = []
 			for string in strings:
 				if string not in invalid_cell_cont:
-					word_forms.append(string.strip(to_strip))
+					bare = string.strip(to_strip)
+					if bare not in invalid_cell_cont:
+						word_forms.append(bare)
 				elif string in dashes:
 					word_forms.append('')
 			# add to plurals column, add as tuple if there were multiple valid strings
@@ -157,11 +166,13 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			cell_cont = next_row[0].xpath('./td[1]//text()')
 			strings = []
 			for string in cell_cont:
-				strings.extend(string.split(','))
+				strings.extend(string.split(', '))
 			word_forms = []
 			for string in strings:
 				if string not in invalid_cell_cont:
-					word_forms.append(string.strip(to_strip))
+					bare = string.strip(to_strip)
+					if bare not in invalid_cell_cont:
+						word_forms.append(bare)
 				elif string in dashes:
 					word_forms.append('')
 			if len(word_forms) == 1:
@@ -172,11 +183,13 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			cell_cont = next_row[0].xpath('./td[2]//text()')
 			strings = []
 			for string in cell_cont:
-				strings.extend(string.split(','))
+				strings.extend(string.split(', '))
 			word_forms = []
 			for string in strings:
 				if string not in invalid_cell_cont:
-					word_forms.append(string.strip(to_strip))
+					bare = string.strip(to_strip)
+					if bare not in invalid_cell_cont:
+						word_forms.append(bare)
 				elif string in dashes:
 					word_forms.append('')
 			if len(word_forms) == 1:
@@ -201,7 +214,8 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 		return answer_table
 
 	# articles about pronouns and numerals tend to have the same type of table on the Wiktionary
-	elif wtype in {"Pronoun", "Numeral"}:
+	elif wtype in {"Pronoun", "Numeral"} or tabletype == "other_":
+		table = wtype_elem[0].xpath('./following::table[1]')
 		col_sg = []
 		col_pl = []
 		table = table[0].xpath('.//table[1]')
@@ -213,11 +227,13 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			cell_cont = curr_row[0].xpath('./td[2]//text()')
 			strings = []
 			for string in cell_cont:
-				strings.extend(string.split(','))
+				strings.extend(string.split(', '))
 			word_forms = []
 			for string in strings:
 				if string not in invalid_cell_cont:
-					word_forms.append(string.strip(to_strip))
+					bare = string.strip(to_strip)
+					if bare not in invalid_cell_cont:
+						word_forms.append(bare)
 				elif string in dashes:
 					word_forms.append('')
 			if len(word_forms) == 1:
@@ -228,11 +244,13 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			cell_cont = curr_row[0].xpath('./td[2]//text()')
 			strings = []
 			for string in cell_cont:
-				strings.extend(string.split(','))
+				strings.extend(string.split(', '))
 			word_forms = []
 			for string in strings:
 				if string not in invalid_cell_cont:
-					word_forms.append(string.strip(to_strip))
+					bare = string.strip(to_strip)
+					if bare not in invalid_cell_cont:
+						word_forms.append(bare)
 				elif string in dashes:
 					word_forms.append('')
 			if len(word_forms) == 1:
@@ -253,11 +271,13 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			cell_cont = next_row[0].xpath('./td[2]//text()')
 			strings = []
 			for string in cell_cont:
-				strings.extend(string.split(','))
+				strings.extend(string.split(', '))
 			word_forms = []
 			for string in strings:
 				if string not in invalid_cell_cont:
-					word_forms.append(string.strip(to_strip))
+					bare = string.strip(to_strip)
+					if bare not in invalid_cell_cont:
+						word_forms.append(bare)
 				elif string in dashes:
 					word_forms.append('')
 			if len(word_forms) == 1:
@@ -268,11 +288,13 @@ def scrape_declension_table(word, wtype="Noun", language="Finnish"):
 			cell_cont = next_row[0].xpath('./td[3]//text()')
 			strings = []
 			for string in cell_cont:
-				strings.extend(string.split(','))
+				strings.extend(string.split(', '))
 			word_forms = []
 			for string in strings:
 				if string not in invalid_cell_cont:
-					word_forms.append(string.strip(to_strip))
+					bare = string.strip(to_strip)
+					if bare not in invalid_cell_cont:
+						word_forms.append(bare)
 				elif string in dashes:
 					word_forms.append('')
 			if len(word_forms) == 1:
@@ -299,26 +321,38 @@ with io.open("nominals.txt", mode='rt', encoding='utf-8') as words_file:
 	for line in words_file:
 		if line != '\n':
 			word = line.strip('\n').split(',')
+			for idx in range(len(word)):
+				word[idx] = word[idx].strip()
+
+			if "other_" in word:
+				other_table = "other_"
+				word.remove("other_")
+			else:
+				other_table = "same_"
+
 			if len(word) == 2:
-				words.append( (word[0].strip(), "Noun", "Finnish", word[-1].strip()) )
+				words.append( (word[0], "Noun", "Finnish", other_table, word[-1]) )
 			elif len(word) == 3:
-				if word[1].strip() in {"Noun", "noun", "Adjective", "adjective", "Numeral", "numeral", "Pronoun", "pronoun"}:
-					words.append( (word[0].strip(), word[1].strip(), "Finnish", word[-1].strip()) )
+				if word[1].strip() in {
+					"Noun", "noun", "Proper noun", "proper noun", "Adjective",
+					"adjective", "Numeral", "numeral", "Pronoun", "pronoun"
+					}:
+					words.append( (word[0], word[1], "Finnish", other_table, word[-1]) )
 				else:
-					words.append( (word[0].strip(), "Noun", word[1].strip(), word[-1].strip()) )
+					words.append( (word[0], "Noun", word[1], other_table, word[-1]) )
 			elif len(word) > 3:
-				words.append( (word[0].strip(), word[1].strip(), word[2].strip(), word[-1].strip()) )
+				words.append( (word[0], word[1], word[2], other_table, word[-1]) )
 
 print("words:", words)
 
-tables = {}
+tables = []
 for word in words:
 	response = requests.get(URL_PREFIX + word[0])
 	tree = html.fromstring(response.content)
-	declensions = scrape_declension_table(word[0], word[1], word[2])
-	declensions.append(word[3])
+	declensions = scrape_declension_table(word[0], word[1], word[2], word[3])
+	declensions.append(word[4])
 	print("declensions:", declensions)
-	tables[word[0]] = declensions
+	tables.append(declensions)
 
 with io.open('tables.txt', mode='w', encoding="utf-8") as tables_file:
     json.dump(tables, tables_file)
