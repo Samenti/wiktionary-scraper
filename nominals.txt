@@ -169,6 +169,7 @@ asunto, apartment
 kellari, basement
 sänky, bed
 piha, yard
+kantele, kantele
 hiljainen, adjective, quiet; silent
 tuhma, adjective, naughty
 lelu, toy
